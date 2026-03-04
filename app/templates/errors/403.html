@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}403 — Forbidden{% endblock %}
+{% block content %}
+<div
+    style="min-height:calc(100vh - var(--nav-height));display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;">
+    <div>
+        <div
+            style="font-size:6rem;font-weight:900;background:linear-gradient(135deg,var(--danger),#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">
+            403</div>
+        <h1 style="font-size:1.5rem;font-weight:700;margin:16px 0 10px;">Access Forbidden</h1>
+        <p style="color:var(--text-secondary);margin-bottom:28px;">You don't have permission to access this page.</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">🏠 Go Home</a>
+    </div>
+</div>
+{% endblock %}

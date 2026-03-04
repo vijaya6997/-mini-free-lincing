@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Inbox — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="max-width:700px;margin:0 auto;">
+        <div class="page-header flex-between" style="flex-wrap:wrap;gap:12px;">
+            <div>
+                <h1 class="page-title">💬 Messages</h1>
+                <p class="page-subtitle">Your conversations with other members</p>
+            </div>
+        </div>
+
+        <div class="card" style="padding:16px;">
+            {% if conversations %}
+            {% for convo in conversations %}
+            <a href="{{ url_for('messages.conversation', username=convo.partner.username) }}"
+                class="convo-item {% if convo.unread > 0 %}unread{% endif %}">
+                {% if convo.partner.profile_pic and convo.partner.profile_pic != 'default.png' %}
+                <img src="{{ url_for('static', filename='uploads/' + convo.partner.profile_pic) }}"
+                    class="avatar avatar-md" alt="{{ convo.partner.username }}">
+                {% else %}
+                <div class="avatar-placeholder avatar-md" style="border-radius:50%;font-size:1rem;">{{
+                    convo.partner.username[0].upper() }}</div>
+                {% endif %}
+                <div class="convo-item-body">
+                    <div class="convo-name">
+                        {{ convo.partner.username }}
+                        {% if convo.partner.avg_rating > 0 %}
+                        <span style="font-size:0.72rem;color:#f59e0b;font-weight:600;margin-left:6px;">⭐ {{
+                            convo.partner.avg_rating }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="convo-preview">
+                        {% if convo.last_msg.sender_id == current_user.id %}You: {% endif %}
+                        {{ convo.last_msg.body[:80] }}{% if convo.last_msg.body|length > 80 %}...{% endif %}
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+                    <span class="convo-time">{{ convo.last_msg.timestamp.strftime('%d %b') }}</span>
+                    {% if convo.unread > 0 %}
+                    <span class="nav-badge" style="position:static;">{{ convo.unread }}</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <div class="empty-title">No messages yet</div>
+                <div class="empty-text">Browse jobs and start a conversation with a freelancer or client.</div>
+                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary">Browse Jobs</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

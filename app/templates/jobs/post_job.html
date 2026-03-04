@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Post a Job — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="max-width:720px;margin:0 auto;">
+        <div class="page-header">
+            <h1 class="page-title">Post a New Job</h1>
+            <p class="page-subtitle">Describe your task and find the perfect freelancer in your community.</p>
+        </div>
+
+        <div class="card">
+            <form method="POST" action="{{ url_for('jobs.post_job') }}" novalidate>
+                <div class="form-group">
+                    <label for="title">Job Title <span style="color:var(--danger);">*</span></label>
+                    <input type="text" id="title" name="title" class="form-control"
+                        placeholder="e.g. Need a logo designed for my small business" required minlength="5"
+                        data-maxlength="200">
+                    <div class="form-hint">Be specific. A clear title attracts better applicants.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category <span style="color:var(--danger);">*</span></label>
+                    <select id="category" name="category" class="form-control" required>
+                        <option value="" disabled selected>Select a category...</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Job Description <span style="color:var(--danger);">*</span></label>
+                    <textarea id="description" name="description" class="form-control auto-resize" rows="8"
+                        placeholder="Describe the work in detail:&#10;• What needs to be done?&#10;• Required skills or tools?&#10;• Deadline or timeframe?&#10;• Any special requirements?"
+                        required data-maxlength="5000"></textarea>
+                    <div class="form-hint">Detailed descriptions get 3x more quality applications.</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="form-group">
+                        <label for="budgetInput">Budget (₹) <span style="color:var(--danger);">*</span></label>
+                        <input type="number" id="budgetInput" name="budget" class="form-control" placeholder="e.g. 500"
+                            min="1" step="1" required>
+                        <div class="form-hint" id="budgetPreview" style="font-weight:600;color:var(--success);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" class="form-control"
+                            placeholder="e.g. Mumbai, Bandra" data-maxlength="100">
+                        <div class="form-hint">Helps local freelancers find you.</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg">🚀 Post Job</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card" style="margin-top:20px;background:var(--accent-glow);border-color:var(--border-accent);">
+            <div style="font-weight:700;margin-bottom:12px;color:var(--text-accent);">💡 Tips for a Great Job Post</div>
+            <ul style="color:var(--text-secondary);font-size:0.875rem;line-height:2;padding-left:20px;">
+                <li>Be specific about the skills and tools required</li>
+                <li>Include any relevant deadlines or milestones</li>
+                <li>Set a fair budget to attract quality applicants</li>
+                <li>Mention your location to connect with nearby freelancers</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

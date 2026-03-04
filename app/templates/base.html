@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}LocalFreelance{% endblock %} — Community Freelancing</title>
+  <meta name="description" content="{% block meta_desc %}Connect with local skilled freelancers for small tasks and services in your community.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar">
+  <a href="{{ url_for('main.index') }}" class="navbar-brand">
+    <div class="brand-icon">⚡</div>
+    Local<span>Freelance</span>
+  </a>
+
+  <div class="navbar-links" id="navLinks">
+    <a href="{{ url_for('jobs.list_jobs') }}" class="nav-link">🔍 Browse Jobs</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('main.dashboard') }}" class="nav-link">🏠 Dashboard</a>
+      <a href="{{ url_for('jobs.my_jobs') }}" class="nav-link">💼 My Jobs</a>
+      <a href="{{ url_for('jobs.my_applications') }}" class="nav-link">📋 Applications</a>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link">
+        💬 Messages
+        {% set unread = current_user.unread_messages_count() %}
+        {% if unread > 0 %}
+          <span class="nav-badge">{{ unread }}</span>
+        {% endif %}
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="navbar-actions" id="navActions">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('jobs.post_job') }}" class="btn btn-primary btn-sm">+ Post Job</a>
+      <a href="{{ url_for('main.profile', username=current_user.username) }}" class="nav-link" style="padding: 6px;">
+        {% if current_user.profile_pic and current_user.profile_pic != 'default.png' %}
+          <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" class="avatar avatar-sm" alt="Profile">
+        {% else %}
+          <div class="avatar avatar-sm avatar-placeholder" style="font-size:0.8rem;">{{ current_user.username[0].upper() }}</div>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm">Login</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Get Started</a>
+    {% endif %}
+  </div>
+
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ══ FLASH MESSAGES ══ -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash {{ category }}" role="alert">
+          <span>
+            {% if category == 'success' %}✅{% elif category == 'danger' or category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+          </span>
+          {{ message }}
+          <button class="flash-close" aria-label="Close">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ══ MAIN CONTENT ══ -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-inner">
+    <p class="footer-text">© 2026 <strong>LocalFreelance</strong> — Community-powered freelancing for everyone.</p>
+    <div class="footer-links">
+      <a href="{{ url_for('main.index') }}">Home</a>
+      <a href="{{ url_for('jobs.list_jobs') }}">Browse Jobs</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('jobs.post_job') }}">Post a Job</a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}">Join Free</a>
+      {% endif %}
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

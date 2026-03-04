@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Browse Jobs — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">Browse Jobs</h1>
+        <p class="page-subtitle">Find the perfect opportunity matching your skills</p>
+    </div>
+
+    <!-- Search & Filters -->
+    <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="filterForm">
+        <div class="card" style="margin-bottom:24px; padding:20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div class="search-bar" style="flex:1;min-width:200px;">
+                    <span style="color:var(--text-muted);">🔍</span>
+                    <input type="text" name="q" id="searchInput" value="{{ q }}"
+                        placeholder="Search jobs by title or keyword...">
+                </div>
+                <select name="category" class="form-control" style="width:200px;">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category==cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <select name="sort" class="form-control" style="width:160px;">
+                    <option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest First</option>
+                    <option value="budget_high" {% if sort=='budget_high' %}selected{% endif %}>Budget: High to Low
+                    </option>
+                    <option value="budget_low" {% if sort=='budget_low' %}selected{% endif %}>Budget: Low to High
+                    </option>
+                </select>
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% if q or selected_category or min_budget or max_budget %}
+                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-ghost">Clear</a>
+                {% endif %}
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;align-items:center;">
+                <span style="font-size:0.8rem;color:var(--text-muted);">Budget range:</span>
+                <input type="number" name="min_budget" placeholder="Min ₹" value="{{ min_budget }}" class="form-control"
+                    style="width:100px;" min="0">
+                <span style="color:var(--text-muted);">–</span>
+                <input type="number" name="max_budget" placeholder="Max ₹" value="{{ max_budget }}" class="form-control"
+                    style="width:100px;" min="0">
+            </div>
+        </div>
+    </form>
+
+    <!-- Category Pills -->
+    <div class="category-scroll" style="margin-bottom:24px;">
+        <a href="{{ url_for('jobs.list_jobs') }}"
+            class="cat-pill {% if not selected_category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('jobs.list_jobs', category=cat, q=q, sort=sort) }}"
+            class="cat-pill {% if selected_category==cat %}active{% endif %}">{{ cat }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Results count -->
+    <div class="flex-between" style="margin-bottom:16px;">
+        <p style="color:var(--text-secondary);font-size:0.875rem;">
+            <strong style="color:var(--text-primary);">{{ jobs|length }}</strong> job{{ 's' if jobs|length != 1 }} found
+            {% if selected_category %}in <span class="badge badge-category">{{ selected_category }}</span>{% endif %}
+            {% if q %} for "<em>{{ q }}</em>"{% endif %}
+        </p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('jobs.post_job') }}" class="btn btn-primary btn-sm">+ Post a Job</a>
+        {% endif %}
+    </div>
+
+    <!-- Jobs Grid -->
+    {% if jobs %}
+    <div class="auto-grid">
+        {% for job in jobs %}
+        <div class="job-card card-hover">
+            <div class="job-card-header">
+                <div class="job-card-title">
+                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                </div>
+                <span class="badge badge-{{ job.status }}">{{ job.status.replace('_',' ').title() }}</span>
+            </div>
+            <div class="job-card-meta">
+                <span class="badge badge-category">{{ job.category }}</span>
+                {% if job.location %}<span class="job-meta-item">📍 {{ job.location }}</span>{% endif %}
+                <span class="job-meta-item">🕐 {{ job.created_at.strftime('%d %b') }}</span>
+                <span class="job-meta-item">📋 {{ job.application_count() }} applied</span>
+            </div>
+            <p class="job-desc">{{ job.description }}</p>
+            <div class="job-footer">
+                <div>
+                    <div class="job-budget">₹{{ "%.0f"|format(job.budget) }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">by {{ job.poster.username }}</div>
+                </div>
+                <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-outline btn-sm">View →</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No jobs found</div>
+            <div class="empty-text">Try different keywords or categories. Or be the first to post a job!</div>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('jobs.post_job') }}" class="btn btn-primary">+ Post a Job</a>
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Join & Post</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

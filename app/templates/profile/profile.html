@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }}'s Profile — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="two-col">
+        <!-- Profile Info -->
+        <div>
+            <div class="card" style="margin-bottom:20px;">
+                <div class="profile-avatar-section">
+                    {% if user.profile_pic and user.profile_pic != 'default.png' %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" class="avatar avatar-xl"
+                        alt="{{ user.username }}">
+                    {% else %}
+                    <div class="avatar-placeholder avatar-xl"
+                        style="width:110px;height:110px;font-size:2.5rem;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 30px var(--accent-glow);">
+                        {{ user.username[0].upper() }}</div>
+                    {% endif %}
+                    <div>
+                        <div class="profile-name">{{ user.full_name or user.username }}</div>
+                        <div class="profile-username">@{{ user.username }}</div>
+                        {% if user.location %}
+                        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:6px;">📍 {{ user.location
+                            }}</div>
+                        {% endif %}
+                        <div class="profile-rating">
+                            {% if user.avg_rating > 0 %}
+                            {% for i in range(1,6) %}
+                            <span class="star {% if i <= user.avg_rating %}filled{% endif %}">★</span>
+                            {% endfor %}
+                            <span class="rating-value">{{ user.avg_rating }}</span>
+                            <span class="rating-count">({{ user.rating_count }} review{{ 's' if user.rating_count != 1
+                                }})</span>
+                            {% else %}
+                            <span style="color:var(--text-muted);font-size:0.85rem;">No reviews yet</span>
+                            {% endif %}
+                        </div>
+                        <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Member since {{
+                            user.created_at.strftime('%B %Y') }}</div>
+                    </div>
+                </div>
+
+                {% if can_message or (current_user.is_authenticated and current_user.id == user.id) %}
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                    <a href="{{ url_for('main.edit_profile') }}" class="btn btn-outline">⚙️ Edit Profile</a>
+                    {% elif can_message %}
+                    <a href="{{ url_for('messages.conversation', username=user.username) }}" class="btn btn-primary">💬
+                        Send Message</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if user.bio %}
+            <div class="card" style="margin-bottom:20px;">
+                <div class="section-title" style="margin-bottom:14px;">About</div>
+                <p style="color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;font-size:0.9rem;">{{
+                    user.bio }}</p>
+            </div>
+            {% endif %}
+
+            {% if user.skills_list() %}
+            <div class="card" style="margin-bottom:20px;">
+                <div class="section-title" style="margin-bottom:14px;">Skills</div>
+                <div class="skills-list">
+                    {% for skill in user.skills_list() %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reviews Section -->
+            <div class="card">
+                <div class="section-title" style="margin-bottom:16px;">Reviews ({{ reviews|length }})</div>
+                {% if reviews %}
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    {% for review in reviews %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <a href="{{ url_for('main.profile', username=review.reviewer.username) }}"
+                                style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+                                {% if review.reviewer.profile_pic and review.reviewer.profile_pic != 'default.png' %}
+                                <img src="{{ url_for('static', filename='uploads/' + review.reviewer.profile_pic) }}"
+                                    class="avatar avatar-sm" alt="{{ review.reviewer.username }}">
+                                {% else %}
+                                <div class="avatar-placeholder avatar-sm"
+                                    style="border-radius:50%;font-size:0.8rem;width:36px;height:36px;">{{
+                                    review.reviewer.username[0].upper() }}</div>
+                                {% endif %}
+                                <div class="review-meta">
+                                    <div class="review-author">{{ review.reviewer.username }}</div>
+                                    <div class="review-date">{{ review.created_at.strftime('%d %b %Y') }} · for "{{
+                                        review.job.title }}"</div>
+                                </div>
+                            </a>
+                            <div class="stars" style="margin-left:auto;">
+                                {% for i in range(1,6) %}
+                                <span class="star {% if i <= review.rating %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if review.comment %}
+                        <div class="review-text">{{ review.comment }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding:30px 20px;">
+                    <div class="empty-icon">⭐</div>
+                    <div class="empty-title">No reviews yet</div>
+                    <div class="empty-text">Complete jobs to start receiving reviews.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar: Posted Jobs -->
+        <div>
+            {% if posted_jobs %}
+            <div class="card">
+                <div class="section-title" style="margin-bottom:16px;">Posted Jobs</div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    {% for job in posted_jobs %}
+                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}"
+                        style="padding:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);text-decoration:none;display:block;transition:var(--transition);">
+                        <div style="display:flex;align-items:flex-start;gap:8px;justify-content:space-between;">
+                            <span style="font-weight:600;font-size:0.9rem;color:var(--text-primary);">{{ job.title
+                                }}</span>
+                            <span class="badge badge-{{ job.status }}" style="flex-shrink:0;">{{
+                                job.status.replace('_',' ').title() }}</span>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:6px;font-size:0.75rem;color:var(--text-muted);">
+                            <span>{{ job.category }}</span>
+                            <span style="color:var(--success);font-weight:700;">₹{{ "%.0f"|format(job.budget) }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="empty-state" style="padding:30px 20px;">
+                    <div class="empty-icon">💼</div>
+                    <div class="empty-title">No jobs posted</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

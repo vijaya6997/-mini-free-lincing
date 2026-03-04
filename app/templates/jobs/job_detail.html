@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="two-col">
+        <!-- Main Content -->
+        <div>
+            <!-- Job Header -->
+            <div class="card" style="margin-bottom:20px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                            <span class="badge badge-{{ job.status }}">{{ job.status.replace('_',' ').title() }}</span>
+                            <span class="badge badge-category">{{ job.category }}</span>
+                        </div>
+                        <h1 class="page-title" style="font-size:1.5rem;">{{ job.title }}</h1>
+                        <div
+                            style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:0.85rem;color:var(--text-secondary);">
+                            <span>👤 <a href="{{ url_for('main.profile', username=job.poster.username) }}"
+                                    style="color:var(--text-accent);">{{ job.poster.username }}</a></span>
+                            {% if job.location %}<span>📍 {{ job.location }}</span>{% endif %}
+                            <span>🕐 Posted {{ job.created_at.strftime('%d %b %Y') }}</span>
+                            <span>📋 {{ job.application_count() }} application{{ 's' if job.application_count() != 1
+                                }}</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:1.8rem;font-weight:900;color:var(--success);">₹{{
+                            "%.0f"|format(job.budget) }}</div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);">Budget</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="card" style="margin-bottom:20px;">
+                <div class="section-title" style="margin-bottom:16px;">Job Description</div>
+                <div style="color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;font-size:0.9rem;">{{
+                    job.description }}</div>
+            </div>
+
+            <!-- Apply Section -->
+            {% if current_user.is_authenticated %}
+            {% if current_user.id == job.poster_id %}
+            <!-- Owner Controls -->
+            <div class="card" style="margin-bottom:20px;">
+                <div class="section-title" style="margin-bottom:16px;">Manage This Job</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    {% if job.status == 'open' %}
+                    <form method="POST" action="{{ url_for('jobs.close_job', job_id=job.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-ghost btn-sm"
+                            data-confirm="Close this job to new applications?">Close Job</button>
+                    </form>
+                    {% elif job.status == 'in_progress' %}
+                    <form method="POST" action="{{ url_for('jobs.complete_job', job_id=job.id) }}"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm"
+                            data-confirm="Mark this job as completed?">✅ Mark Complete</button>
+                    </form>
+                    {% elif job.status == 'completed' and job.accepted_applicant_id %}
+                    <a href="{{ url_for('ratings.leave_review', username=job.accepted_applicant.username, job_id=job.id) }}"
+                        class="btn btn-outline btn-sm">⭐ Leave Review</a>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('jobs.delete_job', job_id=job.id) }}"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm"
+                            data-confirm="Permanently delete this job?">🗑 Delete</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Applications List (Owner Only) -->
+            {% if applications %}
+            <div class="card">
+                <div class="section-title" style="margin-bottom:16px;">Applications ({{ applications|length }})</div>
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    {% for app in applications %}
+                    <div
+                        style="padding:18px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                            <a href="{{ url_for('main.profile', username=app.applicant.username) }}"
+                                style="font-weight:700;color:var(--text-accent);">{{ app.applicant.username }}</a>
+                            <span class="badge badge-{{ app.status }}">{{ app.status.title() }}</span>
+                            {% if app.applicant.avg_rating > 0 %}
+                            <span style="color:#f59e0b;font-size:0.8rem;">⭐ {{ app.applicant.avg_rating }}</span>
+                            {% endif %}
+                            {% if app.proposed_budget %}
+                            <span style="color:var(--success);font-weight:700;">₹{{ "%.0f"|format(app.proposed_budget)
+                                }}</span>
+                            {% endif %}
+                            <span style="color:var(--text-muted);font-size:0.75rem;margin-left:auto;">{{
+                                app.created_at.strftime('%d %b') }}</span>
+                        </div>
+                        <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6;margin-bottom:12px;">{{
+                            app.cover_letter }}</p>
+                        {% if app.status == 'pending' and job.status == 'open' %}
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <form method="POST"
+                                action="{{ url_for('jobs.update_application_status', job_id=job.id, app_id=app.id) }}">
+                                <input type="hidden" name="status" value="accepted">
+                                <button type="submit" class="btn btn-success btn-sm">✅ Accept</button>
+                            </form>
+                            <form method="POST"
+                                action="{{ url_for('jobs.update_application_status', job_id=job.id, app_id=app.id) }}">
+                                <input type="hidden" name="status" value="rejected">
+                                <button type="submit" class="btn btn-danger btn-sm">✗ Reject</button>
+                            </form>
+                            <a href="{{ url_for('messages.conversation', username=app.applicant.username) }}"
+                                class="btn btn-ghost btn-sm">💬 Message</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-icon">📋</div>
+                    <div class="empty-title">No applications yet</div>
+                    <div class="empty-text">Share your job posting to attract applicants.</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% elif job.status == 'open' %}
+            <!-- Apply Form -->
+            {% if user_application %}
+            <div class="card" style="border-color:var(--border-accent);">
+                <div style="text-align:center;padding:16px 0;">
+                    <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+                    <div style="font-weight:700;margin-bottom:6px;">Application Submitted</div>
+                    <span class="badge badge-{{ user_application.status }}">{{ user_application.status.title() }}</span>
+                    <p style="color:var(--text-secondary);font-size:0.875rem;margin-top:12px;">{{
+                        user_application.cover_letter[:200] }}...</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="section-title" style="margin-bottom:16px;">Apply for this Job</div>
+                <form method="POST" action="{{ url_for('jobs.apply_job', job_id=job.id) }}">
+                    <div class="form-group">
+                        <label for="cover_letter">Cover Letter <span style="color:var(--danger);">*</span></label>
+                        <textarea id="cover_letter" name="cover_letter" class="form-control auto-resize" rows="5"
+                            placeholder="Introduce yourself, explain why you're the best fit, and describe your approach..."
+                            required minlength="20" data-maxlength="1000"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="proposed_budget">Your Proposed Budget (₹)</label>
+                        <input type="number" id="proposed_budget" name="proposed_budget" class="form-control"
+                            placeholder="Leave blank to accept posted budget" min="0" step="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Submit Application 🚀</button>
+                </form>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="card">
+                <p style="color:var(--text-muted);text-align:center;padding:20px 0;">This job is no longer accepting
+                    applications.</p>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="card" style="text-align:center;padding:32px;">
+                <p style="color:var(--text-secondary);margin-bottom:16px;">Sign in to apply for this job</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login to Apply</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Poster Info -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="section-title" style="margin-bottom:16px;">Posted By</div>
+                <a href="{{ url_for('main.profile', username=job.poster.username) }}"
+                    style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;">
+                    {% if job.poster.profile_pic and job.poster.profile_pic != 'default.png' %}
+                    <img src="{{ url_for('static', filename='uploads/' + job.poster.profile_pic) }}"
+                        class="avatar avatar-md" alt="{{ job.poster.username }}">
+                    {% else %}
+                    <div class="avatar avatar-md avatar-placeholder" style="font-size:1rem;">{{
+                        job.poster.username[0].upper() }}</div>
+                    {% endif %}
+                    <div>
+                        <div style="font-weight:700;">{{ job.poster.full_name or job.poster.username }}</div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);">@{{ job.poster.username }}</div>
+                        {% if job.poster.avg_rating > 0 %}
+                        <div style="color:#f59e0b;font-size:0.8rem;margin-top:4px;">⭐ {{ job.poster.avg_rating }}/5
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                {% if current_user.is_authenticated and current_user.id != job.poster_id %}
+                <div style="margin-top:16px;">
+                    <a href="{{ url_for('messages.conversation', username=job.poster.username) }}"
+                        class="btn btn-ghost btn-full">💬 Send Message</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Job Details -->
+            <div class="card">
+                <div class="section-title" style="margin-bottom:16px;">Job Details</div>
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div class="flex-between">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">Category</span>
+                        <span class="badge badge-category">{{ job.category }}</span>
+                    </div>
+                    <div class="flex-between">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">Budget</span>
+                        <span style="font-weight:700;color:var(--success);">₹{{ "%.0f"|format(job.budget) }}</span>
+                    </div>
+                    <div class="flex-between">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">Status</span>
+                        <span class="badge badge-{{ job.status }}">{{ job.status.replace('_',' ').title() }}</span>
+                    </div>
+                    {% if job.location %}
+                    <div class="flex-between">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">Location</span>
+                        <span style="font-size:0.85rem;">📍 {{ job.location }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex-between">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">Posted</span>
+                        <span style="font-size:0.85rem;">{{ job.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

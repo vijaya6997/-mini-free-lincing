@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}My Applications — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">My Applications</h1>
+        <p class="page-subtitle">Track all jobs you've applied to</p>
+    </div>
+
+    {% if applications %}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        {% for app in applications %}
+        <div class="card" style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+                    <span class="badge badge-{{ app.status }}">{{ app.status.title() }}</span>
+                    <span class="badge badge-category">{{ app.job.category }}</span>
+                    <span style="font-size:0.75rem;color:var(--text-muted);">Applied {{ app.created_at.strftime('%d %b
+                        %Y') }}</span>
+                </div>
+                <a href="{{ url_for('jobs.job_detail', job_id=app.job_id) }}"
+                    style="font-size:1.05rem;font-weight:700;color:var(--text-primary);">{{ app.job.title }}</a>
+                <div style="color:var(--text-muted);font-size:0.82rem;margin-top:6px;">
+                    by <a href="{{ url_for('main.profile', username=app.job.poster.username) }}"
+                        style="color:var(--text-accent);">{{ app.job.poster.username }}</a>
+                    &nbsp;·&nbsp; Budget: <span style="color:var(--success);font-weight:700;">₹{{
+                        "%.0f"|format(app.job.budget) }}</span>
+                    {% if app.proposed_budget %}&nbsp;·&nbsp; Your offer: <span
+                        style="color:var(--accent-light);font-weight:700;">₹{{ "%.0f"|format(app.proposed_budget)
+                        }}</span>{% endif %}
+                </div>
+                <div
+                    style="margin-top:10px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-sm);font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">
+                    {{ app.cover_letter[:300] }}{% if app.cover_letter|length > 300 %}...{% endif %}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+                <a href="{{ url_for('jobs.job_detail', job_id=app.job_id) }}" class="btn btn-outline btn-sm">View
+                    Job</a>
+                <a href="{{ url_for('messages.conversation', username=app.job.poster.username) }}"
+                    class="btn btn-ghost btn-sm">💬 Message</a>
+                {% if app.status == 'accepted' and app.job.status == 'completed' %}
+                <a href="{{ url_for('ratings.leave_review', username=app.job.poster.username, job_id=app.job_id) }}"
+                    class="btn btn-primary btn-sm">⭐ Review</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">No applications yet</div>
+            <div class="empty-text">Browse available jobs and apply to the ones that match your skills!</div>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary">Browse Jobs</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

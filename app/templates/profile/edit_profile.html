@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="max-width:680px;margin:0 auto;">
+        <div class="page-header">
+            <h1 class="page-title">Edit Profile</h1>
+            <p class="page-subtitle">Update your public profile information</p>
+        </div>
+
+        <div class="card">
+            <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data" novalidate>
+
+                <!-- Avatar Upload -->
+                <div
+                    style="text-align:center;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid var(--border);">
+                    {% if current_user.profile_pic and current_user.profile_pic != 'default.png' %}
+                    <img id="profilePicPreview"
+                        src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}"
+                        class="avatar avatar-xl" style="margin:0 auto 16px;" alt="Profile">
+                    {% else %}
+                    <div id="avatarPlaceholder" class="avatar-placeholder"
+                        style="width:90px;height:90px;border-radius:50%;font-size:2rem;margin:0 auto 16px;border:3px solid var(--accent);">
+                        {{ current_user.username[0].upper() }}</div>
+                    <img id="profilePicPreview" style="display:none;" class="avatar avatar-xl"
+                        style="margin:0 auto 16px;" alt="Profile">
+                    {% endif %}
+                    <label for="profilePicInput" class="btn btn-ghost btn-sm" style="cursor:pointer;">📷 Change
+                        Photo</label>
+                    <input type="file" id="profilePicInput" name="profile_pic" accept="image/*" style="display:none;">
+                    <div class="form-hint" style="margin-top:8px;">JPG, PNG, WebP up to 5MB</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control"
+                        value="{{ current_user.full_name or '' }}" placeholder="Your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Bio / About Me</label>
+                    <textarea id="bio" name="bio" class="form-control auto-resize" rows="5"
+                        placeholder="Tell clients about yourself, your experience, and what you offer..."
+                        data-maxlength="1000">{{ current_user.bio or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" class="form-control"
+                        value="{{ current_user.location or '' }}" placeholder="e.g. Mumbai, Delhi, Bangalore...">
+                    <div class="form-hint">Your city or neighbourhood helps local clients find you.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="skills">Skills</label>
+                    <input type="text" id="skills" name="skills" class="form-control"
+                        value="{{ current_user.skills or '' }}"
+                        placeholder="e.g. Python, Graphic Design, Photography, Cooking">
+                    <div class="form-hint">Comma-separated list of your skills and expertise.</div>
+                </div>
+
+                <div class="divider"></div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+                    <a href="{{ url_for('main.profile', username=current_user.username) }}"
+                        class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Profile ✅</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

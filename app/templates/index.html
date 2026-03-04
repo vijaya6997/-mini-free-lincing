@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}LocalFreelance — Find Local Skilled Freelancers{% endblock %}
+
+{% block content %}
+<!-- ══ HERO ══ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-badge">🌟 Community-powered freelancing platform</div>
+        <h1 class="hero-title">
+            Connect with <span class="hero-title-gradient">Local Talent</span><br>Get Things Done
+        </h1>
+        <p class="hero-sub">
+            Find skilled freelancers in your community for small tasks, or offer your talents and earn money — simple,
+            trusted, and local.
+        </p>
+        <div class="hero-cta">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary btn-lg">🔍 Browse Jobs</a>
+            <a href="{{ url_for('jobs.post_job') }}" class="btn btn-outline btn-lg">+ Post a Job</a>
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">🚀 Get Started Free</a>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline btn-lg">🔍 Browse Jobs</a>
+            {% endif %}
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-num">{{ total_users }}+</div>
+                <div class="stat-lbl">Members</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">{{ total_jobs }}+</div>
+                <div class="stat-lbl">Jobs Posted</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">{{ total_completed }}+</div>
+                <div class="stat-lbl">Completed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">15+</div>
+                <div class="stat-lbl">Categories</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section class="hiw-section" style="background: var(--bg-secondary);">
+    <div class="section-heading">
+        <h2>How It Works</h2>
+        <p>Three simple steps to get started with LocalFreelance</p>
+    </div>
+    <div class="hiw-grid">
+        <div class="hiw-card animate-in">
+            <div class="hiw-icon">📝</div>
+            <div class="hiw-step">Step 01</div>
+            <div class="hiw-title">Create Your Profile</div>
+            <div class="hiw-desc">Sign up for free, showcase your skills, set your location and let people find you.
+            </div>
+        </div>
+        <div class="hiw-card animate-in">
+            <div class="hiw-icon">🔍</div>
+            <div class="hiw-step">Step 02</div>
+            <div class="hiw-title">Post or Browse Jobs</div>
+            <div class="hiw-desc">Post a task you need done, or search for jobs that match your skills and availability.
+            </div>
+        </div>
+        <div class="hiw-card animate-in">
+            <div class="hiw-icon">🤝</div>
+            <div class="hiw-step">Step 03</div>
+            <div class="hiw-title">Connect & Earn</div>
+            <div class="hiw-desc">Chat with clients, agree on terms, complete the work, and build your reputation with
+                reviews.</div>
+        </div>
+        <div class="hiw-card animate-in">
+            <div class="hiw-icon">⭐</div>
+            <div class="hiw-step">Step 04</div>
+            <div class="hiw-title">Grow Your Reputation</div>
+            <div class="hiw-desc">Collect reviews and ratings from satisfied clients to stand out in the community.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CATEGORIES ══ -->
+<section style="padding: 60px 20px; max-width: 1100px; margin: 0 auto;">
+    <div class="section-heading">
+        <h2>Browse by Category</h2>
+        <p>Find freelancers across 15 different skill categories</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px;">
+        {% set cat_icons = {'Web Development':'💻','Graphic Design':'🎨','Writing & Content':'✍️','Data
+        Entry':'📊','Home Services':'🏠','Teaching & Tutoring':'📚','Photography':'📷','Delivery &
+        Errands':'🛵','Cooking & Catering':'🍳','Repair &
+        Maintenance':'🔧','Marketing':'📣','Translation':'🌐','Handcraft & Art':'🎭','Fitness &
+        Wellness':'💪','Other':'✨'} %}
+        {% for cat in categories %}
+        <a href="{{ url_for('jobs.list_jobs', category=cat) }}" class="cat-pill"
+            style="justify-content: flex-start; border-radius: 12px; padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 8px; height: auto;">
+            <span style="font-size:1.5rem;">{{ cat_icons.get(cat, '💼') }}</span>
+            <span>{{ cat }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- ══ RECENT JOBS ══ -->
+{% if recent_jobs %}
+<section style="padding: 20px 20px 60px; max-width: 1100px; margin: 0 auto;">
+    <div class="section-header">
+        <div class="section-title">🔥 Recent Opportunities</div>
+        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="auto-grid">
+        {% for job in recent_jobs %}
+        <div class="job-card card-hover">
+            <div class="job-card-header">
+                <div class="job-card-title"><a href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.title
+                        }}</a></div>
+                <span class="badge badge-open">Open</span>
+            </div>
+            <div class="job-card-meta">
+                <span class="badge badge-category">{{ job.category }}</span>
+                {% if job.location %}<span class="job-meta-item">📍 {{ job.location }}</span>{% endif %}
+                <span class="job-meta-item">👤 {{ job.poster.username }}</span>
+            </div>
+            <p class="job-desc">{{ job.description }}</p>
+            <div class="job-footer">
+                <span class="job-budget">₹{{ "%.0f"|format(job.budget) }}</span>
+                <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-outline btn-sm">View Job</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ══ TOP FREELANCERS ══ -->
+{% if top_freelancers %}
+<section style="padding: 20px 20px 80px; max-width: 1100px; margin: 0 auto;">
+    <div class="section-header">
+        <div class="section-title">⭐ Top Rated Freelancers</div>
+        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-ghost btn-sm">Browse Jobs →</a>
+    </div>
+    <div class="four-col">
+        {% for user in top_freelancers %}
+        <a href="{{ url_for('main.profile', username=user.username) }}" class="card card-hover"
+            style="text-align:center; text-decoration:none; color: inherit;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+                {% if user.profile_pic and user.profile_pic != 'default.png' %}
+                <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" class="avatar avatar-lg"
+                    alt="{{ user.username }}">
+                {% else %}
+                <div class="avatar avatar-lg avatar-placeholder"
+                    style="width:80px;height:80px;font-size:1.6rem;border-radius:50%;">{{ user.username[0].upper() }}
+                </div>
+                {% endif %}
+                <div>
+                    <div style="font-weight:700;font-size:0.95rem;">{{ user.username }}</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);">{{ user.location or 'Local Expert' }}</div>
+                    <div style="margin-top:6px;color:#f59e0b;font-weight:700;">⭐ {{ user.avg_rating }}/5</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ user.rating_count }} reviews</div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ══ CTA BANNER ══ -->
+{% if not current_user.is_authenticated %}
+<section
+    style="padding: 80px 20px; text-align:center; background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(233,121,249,0.08)); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <h2 style="font-size:2rem;font-weight:900;letter-spacing:-1px;margin-bottom:16px;">Ready to get started?</h2>
+    <p style="color:var(--text-secondary);margin-bottom:32px;font-size:1.05rem;">Join thousands of local freelancers and
+        clients today. It's completely free!</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">🚀 Create Free Account</a>
+</section>
+{% endif %}
+{% endblock %}

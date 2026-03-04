@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}My Jobs — LocalFreelance{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header flex-between" style="flex-wrap:wrap;gap:16px;">
+        <div>
+            <h1 class="page-title">My Posted Jobs</h1>
+            <p class="page-subtitle">Manage all jobs you have posted</p>
+        </div>
+        <a href="{{ url_for('jobs.post_job') }}" class="btn btn-primary">+ Post New Job</a>
+    </div>
+
+    {% if jobs %}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        {% for job in jobs %}
+        <div class="job-card" style="flex-direction:row;align-items:center;flex-wrap:wrap;gap:16px;">
+            <div style="flex:1;min-width:200px;">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+                    <span class="badge badge-{{ job.status }}">{{ job.status.replace('_',' ').title() }}</span>
+                    <span class="badge badge-category">{{ job.category }}</span>
+                </div>
+                <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="job-card-title"
+                    style="display:block;font-size:1.05rem;">{{ job.title }}</a>
+                <div class="job-card-meta" style="margin-top:6px;">
+                    <span class="job-meta-item">🕐 {{ job.created_at.strftime('%d %b %Y') }}</span>
+                    <span class="job-meta-item">📋 {{ job.application_count() }} applicant{{ 's' if
+                        job.application_count() != 1 }}</span>
+                    <span style="color:var(--success);font-weight:700;">₹{{ "%.0f"|format(job.budget) }}</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+                <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-outline btn-sm">View →</a>
+                {% if job.status == 'in_progress' %}
+                <form method="POST" action="{{ url_for('jobs.complete_job', job_id=job.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-sm" data-confirm="Mark as completed?">✅
+                        Complete</button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('jobs.delete_job', job_id=job.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                        data-confirm="Delete this job permanently?">🗑</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-icon">💼</div>
+            <div class="empty-title">No jobs posted yet</div>
+            <div class="empty-text">Start by posting your first job to find talented freelancers in your community.
+            </div>
+            <a href="{{ url_for('jobs.post_job') }}" class="btn btn-primary">+ Post Your First Job</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
